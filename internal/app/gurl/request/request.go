@@ -10,8 +10,8 @@ import (
 	"net/url"
 )
 
-// GURL represents a gurl command. it's initialized from cli arguments and options.
-type GURL struct {
+// RawRequest represents a gurl command. it's initialized from cli arguments and options.
+type RawRequest struct {
 	URL           string
 	Method        string
 	Headers       map[string]string
@@ -22,7 +22,7 @@ type GURL struct {
 	ClientTimeout int
 }
 
-func (g *GURL) ToHTTPRequest() (*http.Request, error) {
+func (g *RawRequest) ToHTTPRequest() (*http.Request, error) {
 	requestURL, err := url.ParseRequestURI(g.URL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid url format: %w", err)
@@ -57,14 +57,14 @@ func (g *GURL) ToHTTPRequest() (*http.Request, error) {
 	return req, nil
 }
 
-func (g *GURL) parseData() (io.Reader, error) {
+func (g *RawRequest) parseData() (io.Reader, error) {
 	if g.JSONMessage != "" {
 		if _, ok := g.Headers[HeaderContentType]; !ok {
 			g.Headers[HeaderContentType] = ContentTypeJSON
 		}
 
 		if !validation.IsStringJSON(g.JSONMessage) {
-			return nil, fmt.Errorf("invalid JSON data")
+			log.Printf("invalid JSON string")
 		}
 
 		return bytes.NewReader([]byte(g.JSONMessage)), nil
