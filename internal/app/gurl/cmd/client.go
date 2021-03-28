@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"math"
 	"strings"
+	"time"
 )
 
 const (
@@ -21,14 +22,14 @@ const (
 
 func main(gurl *request.RawRequest) error {
 
-	c := client.NewGURL(gurl.ClientTimeout)
+	c := client.NewGURL()
 
 	httpRequest, err := gurl.ToHTTPRequest()
 	if err != nil {
 		return fmt.Errorf("failed to launch gurl command: %w", err)
 	}
 
-	response, err := c.Send(httpRequest)
+	response, err := c.Send(httpRequest, time.Duration(gurl.ClientTimeout)*time.Second)
 	if err != nil {
 		return fmt.Errorf("failed to get gurl response: %w", err)
 	}

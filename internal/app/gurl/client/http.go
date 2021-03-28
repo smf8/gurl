@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -12,22 +13,34 @@ type GURLClient struct {
 	C *http.Client
 }
 
-func NewGURL(timeout int) *GURLClient {
-	// TODO: investivate if this can be achieved from request side with RequestWithContext
-	transport := http.Transport{
-		ResponseHeaderTimeout: time.Duration(timeout) * time.Second,
-	}
-	httpClient := &http.Client{
-		Transport: &transport,
-	}
+func NewGURL() *GURLClient {
+	httpClient := &http.Client{}
 
 	return &GURLClient{
 		C: httpClient,
 	}
 }
 
-func (g *GURLClient) Send(request *http.Request) (*http.Response, error) {
-	return g.C.Do(request)
+func (g *GURLClient) Send(request *http.Request, timeout time.Duration) (*http.Response, error) {
+	var resp *http.Response
+
+	// we use custom cancellation to detect if response is being filled or not
+	c, cancel := context.WithCancel(context.Background())
+	req := request.WithContext(c)
+
+	go func() {
+		<-time.After(timeout)
+		if resp == nil {
+			cancel()
+		}
+	}()
+
+	resp, err := g.C.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 func (g *GURLClient) DumpResponse(response *http.Response, shouldPrint bool) map[string]interface{} {
