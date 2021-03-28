@@ -5,4 +5,5 @@ const (
 	ContentTypeJSON           = "application/json"
 	ContentTypeFormURLEncoded = "application/x-www-form-urlencoded"
 	ContentTypeOctetStream    = "application/octet-stream"
+	ContentTypeJPEGImage      = "image/jpeg"
 )

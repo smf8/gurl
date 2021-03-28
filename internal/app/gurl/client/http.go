@@ -3,9 +3,12 @@ package client
 import (
 	"context"
 	"fmt"
+	"github.com/smf8/gurl/internal/app/gurl/request"
+	"github.com/smf8/gurl/internal/app/gurl/response"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -43,21 +46,30 @@ func (g *GURLClient) Send(request *http.Request, timeout time.Duration) (*http.R
 	return resp, nil
 }
 
-func (g *GURLClient) DumpResponse(response *http.Response, shouldPrint bool) map[string]interface{} {
+func (g *GURLClient) DumpResponse(resp *http.Response, shouldPrint bool) map[string]interface{} {
 	result := make(map[string]interface{})
 
-	result["headers"] = response.Header
-	result["status"] = response.Status
-	result["code"] = response.StatusCode
-	result["Protocol"] = response.Proto
+	result["headers"] = resp.Header
+	result["status"] = resp.Status
+	result["code"] = resp.StatusCode
+	result["Protocol"] = resp.Proto
 
-	// handle response body
-	// TODO: do something else about files with non-text content
+	// handle resp body
 
-	if body, err := ioutil.ReadAll(response.Body); err == nil {
-		result["Body"] = string(body)
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("failed to read resp body: %s", err.Error())
+	}
+
+	contentType := resp.Header.Get(request.HeaderContentType)
+
+	if !strings.HasPrefix(contentType, "text") {
+		err = response.SaveFile(contentType, body, resp.Request.URL.Path)
+		if err != nil {
+			log.Printf("failed to save file: %s", err.Error())
+		}
 	} else {
-		log.Printf("failed to read response body: %s", err.Error())
+		result["Body"] = string(body)
 	}
 
 	if shouldPrint {
@@ -65,5 +77,6 @@ func (g *GURLClient) DumpResponse(response *http.Response, shouldPrint bool) map
 			fmt.Printf("[%s] : %v\n===========================\n", key, value)
 		}
 	}
+
 	return result
 }
