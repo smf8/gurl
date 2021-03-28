@@ -24,10 +24,9 @@ linters-settings:
 linters:
   enable-all: true
   disable:
-    - nolintlint
-    - goerr113
-    - errcheck
-    - godox
+#    - goerr113
+#    - errcheck
+#    - godox
 
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source

@@ -13,13 +13,10 @@ all: format lint build
 ############################################################
 
 build:
-	CGO_ENABLED=1 go build -ldflags $(LDFLAGS)  .
-
-build-static:
-	CGO_ENABLED=1 go build -v -o $(APP) -a -installsuffix cgo -ldflags $(LDFLAGS) .
+	CGO_ENABLED=1 go build -ldflags $(LDFLAGS)  ./cmd/gurl
 
 install:
-	CGO_ENABLED=1 go install -ldflags $(LDFLAGS)
+	CGO_ENABLED=1 go install -ldflags $(LDFLAGS) ./cmd/gurl
 
 ############################################################
 # Format and Lint
@@ -33,10 +30,10 @@ format: check-formatter
 	find $(ROOT) -type f -name "*.go" -not -path "$(ROOT)/vendor/*" | xargs -n 1 -I R gofmt -s -w R
 
 check-linter:
-	which golangci-lint || GO111MODULE=off curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.23.1
+	which golangci-lint || GO111MODULE=off curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.23.8
 
 lint: check-linter
-	golangci-lint run --deadline 10m $(ROOT)/...
+	golangci-lint run $(ROOT)/...
 
 ############################################################
 # Test
